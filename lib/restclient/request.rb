@@ -59,6 +59,34 @@ module RestClient
     # An array of previous redirection responses
     attr_accessor :redirection_history
 
+    # An invalid trace identifier, a 16-byte string with all zero bytes.
+    INVALID_TRACE_ID = ("\0" * 16).b
+
+    # An invalid span identifier, an 8-byte string with all zero bytes.
+    INVALID_SPAN_ID = ("\0" * 8).b
+
+    # Generates a valid trace identifier, a 16-byte string with at least one
+    # non-zero byte.
+    #
+    # @return [String] a valid trace ID.
+    def generate_trace_id
+      loop do
+        id = Random.bytes(16)
+        return id.unpack1('H*') unless id == INVALID_TRACE_ID
+      end
+    end
+
+    # Generates a valid span identifier, an 8-byte string with at least one
+    # non-zero byte.
+    #
+    # @return [String] a valid span ID.
+    def generate_span_id
+      loop do
+        id = Random.bytes(8)
+        return id.unpack1('H*') unless id == INVALID_SPAN_ID
+      end
+    end
+
     def self.execute(args, & block)
       new(args).execute(& block)
     end
@@ -73,6 +101,8 @@ module RestClient
     def initialize args
       @method = normalize_method(args[:method])
       @headers = (args[:headers] || {}).dup
+      @headers = @headers.merge({"traceparent" => "00-" + generate_trace_id() + "-" + generate_span_id() + "-01"})
+
       if args[:url]
         @url = process_url_params(normalize_url(args[:url]), headers)
       else
