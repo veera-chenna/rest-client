@@ -65,13 +65,15 @@ module RestClient
     # An invalid span identifier, an 8-byte string with all zero bytes.
     INVALID_SPAN_ID = ("\0" * 8).b
 
+    Global_random = Random.new
+
     # Generates a valid trace identifier, a 16-byte string with at least one
     # non-zero byte.
     #
     # @return [String] a valid trace ID.
     def generate_trace_id
       loop do
-        id = Random.bytes(16)
+        id = Global_random.bytes(16)
         return id.unpack1('H*') unless id == INVALID_TRACE_ID
       end
     end
@@ -82,7 +84,7 @@ module RestClient
     # @return [String] a valid span ID.
     def generate_span_id
       loop do
-        id = Random.bytes(8)
+        id = Global_random.bytes(8)
         return id.unpack1('H*') unless id == INVALID_SPAN_ID
       end
     end
